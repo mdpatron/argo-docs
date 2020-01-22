@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, { useState, createRef, useEffect } from 'react';
+import React, { useState, createRef, useMemo } from 'react';
 import Layout from '@theme/Layout';
 import axios from 'axios';
 import { ThemeProvider } from '@icgc-argo/uikit';
@@ -53,8 +53,6 @@ const RenderDictionary = ({ schemas, menuRefs }) =>
 function DataDictionary() {
   const [version, setVersion] = useState(data.currentVersion);
   const [dictionary, setDictionary] = useState(data.dictionary);
-  const [filters, setFilters] = useState({ tiers: [], attributes: [] });
-  const [meta, setMeta] = useState({ fileCount: 0, fieldCount: 0 });
 
   const updateVersion = async newVersion => {
     const newDict = await fetchDictionary(newVersion);
@@ -98,12 +96,10 @@ function DataDictionary() {
     contentRef: schemaRefs[camelCase(schema.name)],
   }));
 
-  useEffect(() => {
+  const { fileCount, fieldCount, dataTiers, dataAttributes } = useMemo(() => {
     const schemas = get(dictionary, 'schemas', []);
-    const files = schemas.length;
-    const fields = schemas.reduce((acc, schema) => acc + schema.fields.length, 0);
-    setMeta({ fileCount: files, fieldCount: fields });
-
+    const fileCount = schemas.length;
+    const fieldCount = schemas.reduce((acc, schema) => acc + schema.fields.length, 0);
     const schemaFields = flatten(schemas.map(schema => schema.fields));
     const { validDataTiers, validDataAttributes } = schemaFields.reduce(
       (acc, field) => {
@@ -133,10 +129,16 @@ function DataDictionary() {
       },
       { validDataTiers: new Set(), validDataAttributes: new Set() },
     );
-
-    setFilters({ tiers: [...validDataTiers], attributes: [...validDataAttributes] });
+    return {
+      fileCount,
+      fieldCount,
+      dataTiers: [...validDataAttributes],
+      dataAttributes: [...validDataAttributes],
+    };
   }, [dictionary]);
 
+  console.log('tiers', dataTiers, 'atts', dataAttributes, fileCount, fieldCount);
+  //setFilters({ tiers: [...validDataTiers], attributes: [...validDataAttributes] });
   return (
     <ThemeProvider>
       <Layout permalink="dictionary">
@@ -188,13 +190,14 @@ function DataDictionary() {
               </div>
 
               <FileFilters
-                files={meta.fileCount}
-                fields={meta.fieldCount}
-                dataTiers={filters.tiers.map(d => ({ content: startCase(d), value: d }))}
+                files={fileCount}
+                fields={fieldCount}
+                /*     dataTiers={filters.tiers.map(d => ({ content: startCase(d), value: d }))}
                 dataAttributes={filters.attributes.map(d => ({
                   content: startCase(d),
                   value: d,
                 }))}
+            */
               />
 
               <RenderDictionary schemas={dictionary.schemas} menuRefs={schemaRefs} />
