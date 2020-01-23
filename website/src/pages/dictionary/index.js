@@ -53,6 +53,7 @@ const RenderDictionary = ({ schemas, menuRefs }) =>
 function DataDictionary() {
   const [version, setVersion] = useState(data.currentVersion);
   const [dictionary, setDictionary] = useState(data.dictionary);
+  const [activeFilters, setActiveFilters] = useState({ tier: 'required', attribute: null });
 
   const updateVersion = async newVersion => {
     const newDict = await fetchDictionary(newVersion);
@@ -132,7 +133,7 @@ function DataDictionary() {
     return {
       fileCount,
       fieldCount,
-      dataTiers: [...validDataAttributes],
+      dataTiers: [...validDataTiers],
       dataAttributes: [...validDataAttributes],
     };
   }, [dictionary]);
@@ -192,12 +193,12 @@ function DataDictionary() {
               <FileFilters
                 files={fileCount}
                 fields={fieldCount}
-                /*     dataTiers={filters.tiers.map(d => ({ content: startCase(d), value: d }))}
-                dataAttributes={filters.attributes.map(d => ({
-                  content: startCase(d),
-                  value: d,
-                }))}
-            */
+                setFilters={filters => {
+                  console.log('f', filters);
+                  setActiveFilters(filters);
+                }}
+                filters={{ tiers: dataTiers, attributes: dataAttributes }}
+                activeFilters={activeFilters}
               />
 
               <RenderDictionary schemas={dictionary.schemas} menuRefs={schemaRefs} />
