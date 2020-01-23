@@ -12,7 +12,7 @@ const FileFilters = ({ files = 0, fields = 0, filters, activeFilters, setFilters
     content: startCase(d),
     value: d,
   }));
-
+  console.log('tiers', tiers, 'a', attributes);
   return (
     <Typography variant="data" color="#151c3d">
       <div className={styles.fileFilters}>

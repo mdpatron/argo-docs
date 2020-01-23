@@ -28,6 +28,7 @@ import { TAG_TYPES } from '../../components/Tag';
 import { format as formatDate } from 'date-fns';
 import { DownloadIcon, DownloadButton } from '../../components/common';
 import flatten from 'lodash/flatten';
+import memoize from 'lodash/memoize';
 
 const data = require('./data.json');
 
@@ -43,17 +44,39 @@ async function fetchDiff(version, diffVersion) {
   return response.data;
 }
 
-const RenderDictionary = ({ schemas, menuRefs }) =>
-  schemas ? (
-    schemas.map(schema => <Schema schema={schema} menuRef={menuRefs[camelCase(schema.name)]} />)
-  ) : (
-    <DnaLoader />
-  );
+const filterFields = memoize((fields, filters) => {
+  const { tier, attribute } = filters;
+  return fields.filter(field => {
+    const meta = get(field, 'meta', {});
+    const { primaryId = false, core = false, dependsOn = false } = meta;
+    const restrictions = !!get(field, 'restrictions', false);
+
+    const filterableTiers = {
+      primaryId,
+      core,
+    };
+
+    const filterableAttributes = {
+      dependsOn,
+      restrictions,
+    };
+    return false;
+
+    const isExtended = !!core && !!primaryId && tier === 'extended';
+    if (isExtended) {
+      return true;
+    }
+
+    console.log('filters', tier, attribute, filterable);
+
+    return filters.some(filter => filterable[filter]);
+  });
+});
 
 function DataDictionary() {
   const [version, setVersion] = useState(data.currentVersion);
   const [dictionary, setDictionary] = useState(data.dictionary);
-  const [activeFilters, setActiveFilters] = useState({ tier: 'required', attribute: null });
+  const [activeFilters, setActiveFilters] = useState({ tier: null, attribute: null });
 
   const updateVersion = async newVersion => {
     const newDict = await fetchDictionary(newVersion);
@@ -77,6 +100,27 @@ function DataDictionary() {
           />
         </div>
       </form>
+    );
+  };
+
+  const RenderDictionary = ({ schemas, menuRefs }) => {
+    const hasFilters = Object.values(activeFilters).filter(Boolean).length > 0;
+    const filteredSchemas = hasFilters
+      ? schemas
+          .map(schema => {
+            const filteredFields = filterFields(schema.fields, activeFilters);
+            console.log('filtered fields', filteredFields);
+            return filteredFields.length > 0 ? { ...schema, fields: filteredFields } : null;
+          })
+          .filter(Boolean)
+      : schemas;
+
+    return filteredSchemas ? (
+      filteredSchemas.map(schema => (
+        <Schema schema={schema} menuRef={menuRefs[camelCase(schema.name)]} />
+      ))
+    ) : (
+      <DnaLoader />
     );
   };
 
@@ -108,23 +152,23 @@ function DataDictionary() {
         const { primaryId = false, core = false, dependsOn = false } = meta;
         const restrictions = get(field, 'restrictions', false);
         if (primaryId) {
-          acc.validDataTiers.add(TAG_TYPES.id);
+          acc.validDataTiers.add('primaryId');
         }
 
-        if (!!restrictions) {
-          acc.validDataAttributes.add(TAG_TYPES.required);
+        if (restrictions.required) {
+          acc.validDataAttributes.add('restrictions');
         }
 
         if (dependsOn) {
-          acc.validDataAttributes.add(TAG_TYPES.dependency);
+          acc.validDataAttributes.add('dependsOn');
         }
 
         if (core) {
-          acc.validDataTiers.add(TAG_TYPES.core);
+          acc.validDataTiers.add('core');
         }
 
         if (!core && !primaryId) {
-          acc.validDataTiers.add(TAG_TYPES.extended);
+          acc.validDataTiers.add('extended');
         }
         return acc;
       },
@@ -139,7 +183,7 @@ function DataDictionary() {
   }, [dictionary]);
 
   console.log('tiers', dataTiers, 'atts', dataAttributes, fileCount, fieldCount);
-  //setFilters({ tiers: [...validDataTiers], attributes: [...validDataAttributes] });
+
   return (
     <ThemeProvider>
       <Layout permalink="dictionary">
