@@ -1225,8 +1225,41 @@
             "description": "The denominator value associated with a ratio observation, represented as an integer.",
             "valueType": "integer"
           }
+        ],
+        "profiles": [
+          {
+            "name":"number_of_licensed_beds",
+            "description":"The maximum number of beds for which a hospital holds a license to operate; however, many hospitals do not operate all the beds for which they are licensed. This number is obtained through DHC Primary Research. Licensed beds for Health Systems are equal to the total number of licensed beds of individual Hospitals within a given Health System. (Source: Definitive Healthcare)",
+            "keyCode": {"codeList": ["licensed_beds"]},
+            "permissible": {
+              "codeList": ["quantity [integer]"]
+            }
+          },
+          {
+            "name":"number_of_adult_icu_beds",
+            "description":"ICU (Intensive Care Unit) Beds:  are qualified based on definitions by CMS, Section 2202.7, 22-8.2. These beds include ICU beds, burn ICU beds, surgical ICU beds, premature ICU beds, neonatal ICU beds, pediatric ICU beds, psychiatric ICU beds, trauma ICU beds, and Detox ICU beds. Adult ICU Beds are a sum of all non-pediatric ICU beds. (Source: https://coronavirus-disasterresponse.hub.arcgis.com/datasets/definitivehc::definitive-healthcare-usa-hospital-beds)",
+            "keyCode": {"codeList": ["adult_icu_beds"]},
+            "permissible": {
+              "codeList": ["quantity [integer]"]
+            }
+          },
+          {
+            "name":"open_ICU_beds",
+            "description":"The total number of open ICU beds at the point of reporting. Healthcare organizations define which departments are for intensive and non-intensive acute care.",
+            "keyCode": {"codeList": ["open_ICU_beds"]},
+            "permissible": {
+              "codeList": ["quantity [integer]"]
+            }
+          },
+          {
+            "name":"open_non_ICU_acute_beds",
+            "description":"The total number of open non-intensive, acute care beds at the point of reporting. Healthcare organizations define which departments are for intensive and non-intensive acute care.",
+            "keyCode": {"codeList": ["open_ICU_beds"]},
+            "permissible": {
+              "codeList": ["quantity [integer]"]}          }
         ]
       },
+      
       {
         "name":"measure",
         "description": "A specific metric or measurement.",
